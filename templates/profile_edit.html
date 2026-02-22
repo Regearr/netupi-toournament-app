@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Заповніть профіль (обов'язково)</h2>
+<form method="post" action="/profile/edit" class="form-grid">
+  <label>ПІБ <input name="full_name" value="{{ user.full_name or '' }}" required /></label>
+  <label>Email <input type="email" name="email" value="{{ user.email }}" required /></label>
+  <label>Школа <input name="school_name" value="{{ user.school_name or '' }}"/></label>
+  <label>Контакт <input name="contact_info" value="{{ user.contact_info or '' }}"/></label>
+  <button type="submit">Зберегти</button>
+</form>
+{% endblock %}
