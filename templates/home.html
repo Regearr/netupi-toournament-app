@@ -1,33 +1,17 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Турніри</h2>
-<div>
-  <a href="/?status=registration">Registration open</a> |
-  <a href="/?status=running">Running</a> |
-  <a href="/?status=finished">Finished</a>
-</div>
-{% if user %}
-<p>Ви: {{ user.email }} ({{ user.role.value }}) {% if not user.profile_completed %}<strong>Заповніть профіль!</strong>{% endif %}
-  <a href="/profile/{{ user.id }}">Профіль</a>
-  <a href="/bootstrap-admin">Bootstrap admin</a>
-</p>
-<form action="/auth/logout" method="post"><button>Logout</button></form>
-{% endif %}
-
-<section class="cards">
-  {% for t in tournaments %}
-  <article class="card">
-    <h3><a href="/tournaments/{{t.id}}">{{t.title}}</a></h3>
-    <p>{{t.description}}</p>
-    <p>Status: {{t.status.value}}</p>
-  </article>
-  {% else %}<p>Немає турнірів.</p>{% endfor %}
-</section>
-
 <section>
-  <h3>Оголошення</h3>
-  {% for a in announcements %}
-    <article class="card"><strong>{{a.title}}</strong><p>{{a.body}}</p></article>
-  {% else %}<p>Оголошень немає.</p>{% endfor %}
+  <h2>All tournaments</h2>
+  <div class="cards">
+    {% for t in tournaments %}
+      <article class="card">
+        <h3><a href="/tournaments/{{ t.id }}">{{ t.title }}</a></h3>
+        <p>{{ t.description }}</p>
+        <p>Status: <strong>{{ t.status.value }}</strong></p>
+      </article>
+    {% else %}
+      <p>No tournaments yet.</p>
+    {% endfor %}
+  </div>
 </section>
 {% endblock %}

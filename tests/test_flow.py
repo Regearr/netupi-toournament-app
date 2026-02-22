@@ -2,8 +2,8 @@ from datetime import datetime, timedelta
 
 from fastapi.testclient import TestClient
 
-from app.database import Base, engine
 from app.main import app
+from app.database import Base, engine
 
 
 client = TestClient(app)
@@ -14,43 +14,41 @@ def setup_module():
     Base.metadata.create_all(bind=engine)
 
 
-def test_auth_profile_and_tournament_flow():
-    # register + login first user and bootstrap admin
-    client.post('/auth/register', data={'email': 'admin@test.com', 'password': 'pass'})
-    client.post('/auth/login', data={'email': 'admin@test.com', 'password': 'pass'}, follow_redirects=False)
-    client.post('/profile/edit', data={'full_name': 'Admin', 'email': 'admin@test.com', 'school_name': 'S', 'contact_info': 'c'})
-    client.get('/bootstrap-admin', follow_redirects=False)
-
+def test_core_flow():
+    client.post('/users/seed')
     now = datetime.utcnow()
-    res = client.post('/tournaments', data={
-        'title': 'T1',
-        'description': 'D',
-        'rules': 'R',
-        'start_at': (now + timedelta(days=2)).isoformat(timespec='seconds'),
+    t_res = client.post('/tournaments', data={
+        'title': 'Test Tournament',
+        'description': 'Desc',
+        'rules': 'Rules',
+        'start_at': (now + timedelta(days=1)).isoformat(timespec='seconds'),
         'registration_open_at': (now - timedelta(days=1)).isoformat(timespec='seconds'),
         'registration_close_at': (now + timedelta(days=1)).isoformat(timespec='seconds'),
         'team_member_limit': 4,
-        'round_title': 'Task 1',
-        'round_description': 'Build',
-        'tech_requirements': 'FastAPI',
-        'must_have_csv': 'auth,leaderboard',
-        'round_starts_at': now.isoformat(timespec='seconds'),
-        'round_deadline_at': (now + timedelta(days=2)).isoformat(timespec='seconds'),
     }, follow_redirects=False)
-    assert res.status_code == 303
-    tid = int(res.headers['location'].split('/')[-1])
+    assert t_res.status_code == 303
+    loc = t_res.headers['location']
+    tid = int(loc.split('/')[-1])
 
-    # captain
-    client.post('/auth/register', data={'email': 'capt@test.com', 'password': 'pass'})
-    client.post('/auth/login', data={'email': 'capt@test.com', 'password': 'pass'}, follow_redirects=False)
-    client.post('/profile/edit', data={'full_name': 'Cap', 'email': 'capt@test.com', 'school_name': 'S', 'contact_info': 'c'})
-    reg = client.post(f'/tournaments/{tid}/register-team', data={
+    reg = client.post(f'/tournaments/{tid}/register', data={
         'team_name': 'Alpha',
-        'member_emails_csv': 'm1@test.com,m2@test.com',
-        'member_names_csv': 'M1,M2',
+        'captain_name': 'Cap',
+        'captain_email': 'cap@alpha.com',
+        'member_names_csv': 'A,B',
+        'member_emails_csv': 'a@alpha.com,b@alpha.com',
     }, follow_redirects=False)
     assert reg.status_code == 303
 
-    page = client.get(f'/tournaments/{tid}')
-    assert page.status_code == 200
-    assert 'Alpha' in page.text or 'Task 1' in page.text
+    round_res = client.post(f'/tournaments/{tid}/rounds', data={
+        'title': 'Round 1',
+        'description': 'Build app',
+        'tech_requirements': 'FastAPI',
+        'must_have_csv': 'auth,leaderboard',
+        'starts_at': now.isoformat(timespec='seconds'),
+        'deadline_at': (now + timedelta(days=2)).isoformat(timespec='seconds'),
+    }, follow_redirects=False)
+    assert round_res.status_code == 303
+
+    t_page = client.get(f'/tournaments/{tid}')
+    assert t_page.status_code == 200
+    assert 'Round 1' in t_page.text
