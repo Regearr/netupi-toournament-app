@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<section>
+  <h2>All tournaments</h2>
+  <div class="cards">
+    {% for t in tournaments %}
+      <article class="card">
+        <h3><a href="/tournaments/{{ t.id }}">{{ t.title }}</a></h3>
+        <p>{{ t.description }}</p>
+        <p>Status: <strong>{{ t.status.value }}</strong></p>
+      </article>
+    {% else %}
+      <p>No tournaments yet.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}
