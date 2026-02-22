@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Jury panel: {{ jury.email }}</h2>
+{% for s in submissions %}
+<article class="card">
+  <h3>Submission #{{ s.id }} (Team: {{ s.team.team_name }})</h3>
+  <p><a href="{{ s.github_url }}">GitHub</a> | <a href="{{ s.video_url }}">Video</a></p>
+  <form action="/jury/evaluate/{{ s.id }}" method="post" class="form-grid">
+    <label>Backend <input name="backend_score" type="number" min="0" max="100" required/></label>
+    <label>Database <input name="database_score" type="number" min="0" max="100" required/></label>
+    <label>Frontend <input name="frontend_score" type="number" min="0" max="100" required/></label>
+    <label>Functionality <input name="functional_score" type="number" min="0" max="100" required/></label>
+    <label>UX <input name="ux_score" type="number" min="0" max="100" required/></label>
+    <label>Comment <textarea name="comment"></textarea></label>
+    <button>Save</button>
+  </form>
+</article>
+{% else %}<p>No assignments.</p>{% endfor %}
+{% endblock %}

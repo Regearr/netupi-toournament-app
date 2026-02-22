@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>{{ tournament.title }}</h2>
+<p>{{ tournament.description }}</p>
+<p>Status: {{ tournament.status.value }}</p>
+
+{% if user %}
+<section>
+  <h3>Реєстрація команди (капітан)</h3>
+  <form action="/tournaments/{{ tournament.id }}/register-team" method="post" class="form-grid">
+    <label>Team name <input name="team_name" required/></label>
+    <label>Member emails CSV <input name="member_emails_csv" placeholder="a@mail.com,b@mail.com" required/></label>
+    <label>Member names CSV (обов'язково для нових емейлів) <input name="member_names_csv" placeholder="Ім'я1,Ім'я2"/></label>
+    <label>City/Org <input name="city_or_org"/></label>
+    <label>Contact <input name="contact_handle"/></label>
+    <button type="submit">Зареєструвати команду</button>
+  </form>
+</section>
+{% endif %}
+
+<section>
+  <h3>Раунди</h3>
+  <ul>
+    {% for r in rounds %}
+    <li>#{{r.id}} {{r.title}} — {{r.status.value}} (deadline {{r.deadline_at}})
+      {% if user and user.role.value == 'admin' and r.status.value == 'draft' %}
+      <form method="post" action="/rounds/{{r.id}}/activate" class="inline-form"><button type="submit">Activate</button></form>
+      {% endif %}
+    </li>
+    {% else %}<li>Немає</li>{% endfor %}
+  </ul>
+</section>
+
+{% if active_round and user %}
+<section>
+  <h3>Подати сабміт</h3>
+  <form action="/rounds/{{ active_round.id }}/submit" method="post" class="form-grid">
+    <label>Team ID <input name="team_id" type="number" required/></label>
+    <label>GitHub <input name="github_url" required/></label>
+    <label>Video <input name="video_url" required/></label>
+    <label>Live demo <input name="live_demo_url"/></label>
+    <label>Description <textarea name="description"></textarea></label>
+    <button type="submit">Submit</button>
+  </form>
+</section>
+{% endif %}
+
+{% if user and user.role.value == 'admin' and active_round %}
+<section>
+  <form action="/rounds/{{ active_round.id }}/assign-evaluations" method="post" class="inline-form">
+    <label>K <input name="min_juries_per_work" value="2" type="number"/></label>
+    <button type="submit">Assign evaluations</button>
+  </form>
+  <form action="/rounds/{{ active_round.id }}/finish" method="post" class="inline-form"><button>Finish evaluation</button></form>
+  <a href="/tournaments/{{ tournament.id }}/export.csv">Export CSV</a>
+</section>
+<section>
+  <h3>Розклад</h3>
+  <form action="/tournaments/{{ tournament.id }}/events" method="post" class="form-grid">
+    <label>Title <input name="title" required /></label>
+    <label>Starts at ISO <input name="starts_at" value="2026-01-01T09:00:00" required/></label>
+    <label>Description <input name="description"/></label>
+    <button>Add event</button>
+  </form>
+  <ul>{% for e in events %}<li>{{e.starts_at}} - {{e.title}} ({{e.description or ''}})</li>{% else %}<li>Немає подій</li>{% endfor %}</ul>
+</section>
+<section>
+  <h3>Оголошення</h3>
+  <form action="/announcements" method="post" class="form-grid">
+    <input type="hidden" name="tournament_id" value="{{ tournament.id }}" />
+    <label>Title <input name="title" required/></label>
+    <label>Body <textarea name="body" required></textarea></label>
+    <button>Create announcement</button>
+  </form>
+</section>
+{% endif %}
+
+<section>
+  <h3>Таблиця лідерів (оновлюється через API)</h3>
+  <ol id="lb">
+    {% for row in leaderboard %}<li>{{row.team_name}} — {{row.score}}</li>{% else %}<li>No evaluations yet</li>{% endfor %}
+  </ol>
+  <script>
+    async function refreshLB(){
+      const res = await fetch('/leaderboard/{{tournament.id}}/stream');
+      const data = await res.json();
+      const lb = document.getElementById('lb');
+      lb.innerHTML = '';
+      if(!data.data.length){ lb.innerHTML = '<li>No evaluations yet</li>'; return; }
+      data.data.forEach(r => {
+        const li = document.createElement('li');
+        li.textContent = `${r.team_name} — ${r.score}`;
+        lb.appendChild(li);
+      });
+    }
+    setInterval(refreshLB, 5000);
+  </script>
+</section>
+
+{% if leaderboard %}
+<p><a href="/certificates/{{ tournament.id }}/{{ leaderboard[0].team_id }}">Згенерувати сертифікат для команди #{{ leaderboard[0].team_id }}</a></p>
+{% endif %}
+
+<section>
+  <h3>Оголошення турніру</h3>
+  {% for a in announcements %}<article class="card"><strong>{{a.title}}</strong><p>{{a.body}}</p></article>{% else %}<p>Немає</p>{% endfor %}
+</section>
+{% endblock %}

@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Архів завершених турнірів</h2>
+<ul>
+{% for t in items %}
+<li><a href="/tournaments/{{t.id}}">{{t.title}}</a></li>
+{% else %}<li>Порожньо</li>{% endfor %}
+</ul>
+{% endblock %}

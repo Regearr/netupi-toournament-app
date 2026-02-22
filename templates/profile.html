@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Профіль: {{ user.email }}</h2>
+<p>Роль: <strong>{{ user.role.value }}</strong></p>
+<p>ПІБ: {{ user.full_name or '-' }}</p>
+<p>Школа: {{ user.school_name or '-' }}</p>
+<p>Контакт: {{ user.contact_info or '-' }}</p>
+<p>Profile completed: {{ user.profile_completed }}</p>
+<a href="/profile/edit">Редагувати профіль</a>
+
+{% if viewer and viewer.role.value == 'admin' %}
+<form action="/admin/role" method="post" class="inline-form">
+  <input type="hidden" name="target_user_id" value="{{ user.id }}" />
+  <select name="role">
+    <option value="visitor">visitor</option>
+    <option value="participant">participant</option>
+    <option value="jury">jury</option>
+    <option value="admin">admin</option>
+  </select>
+  <button type="submit">Призначити роль</button>
+</form>
+{% endif %}
+
+<h3>Команди</h3>
+<ul>{% for t in teams %}<li>{{ t.team_name }} (турнір #{{t.tournament_id}})</li>{% else %}<li>Немає</li>{% endfor %}</ul>
+
+<h3>Внутрішні нотифікації</h3>
+<ul>{% for n in notes %}<li>{{n.message}} ({{n.created_at}})</li>{% else %}<li>Немає</li>{% endfor %}</ul>
+{% endblock %}
