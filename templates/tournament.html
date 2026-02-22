@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>{{ tournament.title }}</h2>
+<p>{{ tournament.description }}</p>
+<p>Status: <strong>{{ tournament.status.value }}</strong></p>
+
+<section>
+  <h3>Team Registration</h3>
+  <form action="/tournaments/{{ tournament.id }}/register" method="post" class="form-grid">
+    <label>Team Name <input name="team_name" required /></label>
+    <label>Captain Name <input name="captain_name" required /></label>
+    <label>Captain Email <input name="captain_email" type="email" required /></label>
+    <label>Member Names CSV <input name="member_names_csv" required /></label>
+    <label>Member Emails CSV <input name="member_emails_csv" required /></label>
+    <label>City/Org <input name="city_or_org" /></label>
+    <label>Contact Telegram/Discord <input name="contact_handle" /></label>
+    <button type="submit">Register Team</button>
+  </form>
+</section>
+
+<section>
+  <h3>Create Round (Admin)</h3>
+  <form action="/tournaments/{{ tournament.id }}/rounds" method="post" class="form-grid">
+    <label>Round Title <input name="title" required /></label>
+    <label>Description <textarea name="description" required></textarea></label>
+    <label>Tech Requirements <textarea name="tech_requirements" required></textarea></label>
+    <label>Must Have CSV <input name="must_have_csv" required /></label>
+    <label>Starts At ISO <input name="starts_at" value="2026-01-01T11:00:00" required /></label>
+    <label>Deadline ISO <input name="deadline_at" value="2026-01-10T23:59:00" required /></label>
+    <label>Extra Materials <input name="extra_materials" /></label>
+    <button type="submit">Create Round</button>
+  </form>
+</section>
+
+{% if active_round %}
+<section>
+  <h3>Active Round: {{ active_round.title }}</h3>
+  <p>{{ active_round.description }}</p>
+  <p>Deadline: {{ active_round.deadline_at }}</p>
+  <p>Must-have: {{ active_round.must_have_csv }}</p>
+
+  <h4>Submit Solution</h4>
+  <form action="/rounds/{{ active_round.id }}/submit" method="post" class="form-grid">
+    <label>Team ID <input name="team_id" type="number" required /></label>
+    <label>GitHub URL <input name="github_url" required /></label>
+    <label>Video URL <input name="video_url" required /></label>
+    <label>Live Demo URL <input name="live_demo_url" /></label>
+    <label>Description <textarea name="description"></textarea></label>
+    <button type="submit">Save Submission</button>
+  </form>
+
+  <form action="/rounds/{{ active_round.id }}/assign-evaluations" method="post" class="inline-form">
+    <label>Min juries/work <input name="min_juries_per_work" type="number" value="2"/></label>
+    <button type="submit">Assign Evaluations</button>
+  </form>
+  <form action="/rounds/{{ active_round.id }}/finish" method="post" class="inline-form">
+    <button type="submit">Finish Evaluation</button>
+  </form>
+</section>
+{% endif %}
+
+<section>
+  <h3>Registered Teams</h3>
+  <ul>
+    {% for team in tournament.teams %}
+      <li>#{{ team.id }} {{ team.team_name }} (captain: {{ team.captain_email }})</li>
+    {% else %}
+      <li>No teams yet</li>
+    {% endfor %}
+  </ul>
+</section>
+
+<section>
+  <h3>Leaderboard</h3>
+  <ol>
+    {% for row in leaderboard %}
+      <li>{{ row.team_name }} — {{ row.score }} ({{ row.evaluations_count }} evals)</li>
+    {% else %}
+      <li>No evaluations yet</li>
+    {% endfor %}
+  </ol>
+</section>
+{% endblock %}

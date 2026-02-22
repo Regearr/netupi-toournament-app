@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Create Tournament</h2>
+<form action="/tournaments" method="post" class="form-grid">
+  <label>Title <input name="title" required /></label>
+  <label>Description <textarea name="description" required></textarea></label>
+  <label>Rules <textarea name="rules"></textarea></label>
+  <label>Start At (ISO) <input name="start_at" value="2026-01-01T10:00:00" required /></label>
+  <label>Registration Open (ISO) <input name="registration_open_at" value="2025-12-01T10:00:00" required /></label>
+  <label>Registration Close (ISO) <input name="registration_close_at" value="2025-12-25T10:00:00" required /></label>
+  <label>Max Teams <input name="max_teams" type="number" /></label>
+  <label>Team Member Limit <input name="team_member_limit" type="number" value="6" required /></label>
+  <button type="submit">Create</button>
+</form>
+{% endblock %}
